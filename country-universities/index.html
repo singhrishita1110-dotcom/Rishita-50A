@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Country - Universities</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+    body { background: #f4f4f9; min-height: 100vh; padding: 20px; }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { text-align: center; margin: 30px 0; color: #333; }
+    .search-box { background: white; padding: 25px; border-radius: 8px; margin: 20px 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .search-box input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 4px; font-size: 16px; margin-bottom: 15px; }
+    .search-box button { width: 100%; padding: 12px; background: #2c3e50; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
+    .search-box button:hover { background: #34495e; }
+    .universities { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+    .university-card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: transform 0.2s; }
+    .university-card:hover { transform: translateY(-5px); }
+    .university-card h3 { margin-bottom: 10px; color: #2c3e50; }
+    .university-card p { margin: 5px 0; color: #666; font-size: 14px; }
+    .university-card a { color: #3498db; text-decoration: none; font-weight: bold; }
+    .university-card a:hover { text-decoration: underline; }
+    .loading { text-align: center; padding: 40px; color: #666; }
+    .error { background: #fdfdfd; border: 1px solid #e74c3c; padding: 15px; border-radius: 4; margin: 20px 0; color: #e74c3c; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Universities by Country</h1>
+    <div class="search-box">
+      <input type="text" id="countryInput" placeholder="Enter country name...">
+      <button onclick="searchUniversities()">Search Universities</button>
+    </div>
+    <div id="universities"></div>
+  </div>
+
+  <script>
+    async function searchUniversities() {
+      const country = document.getElementById('countryInput').value.trim();
+      const universitiesDiv = document.getElementById('universities');
+      
+      if (!country) {
+        universitiesDiv.innerHTML = '<div class="error">Please enter a country name.</div>';
+        return;
+      }
+      
+      universitiesDiv.innerHTML = '<div class="loading">Loading universities...</div>';
+      
+      try {
+        // Using the Universities API
+        const response = await fetch(`https://universities.vercel.app/api?country=${country}`);
+        const data = await response.json();
+        
+        universitiesDiv.innerHTML = '';
+        
+        if (!data || data.length === 0) {
+          universitiesDiv.innerHTML = '<div class="error">No universities found for this country. Try another.</div>';
+          return;
+        }
+        
+        const cards = data.map(univ => {
+          const name = univ.name || 'Unknown';
+          const web = univ.web_pages ? univ.web_pages[0] : '#';
+          const state = univ.state_province || 'N/A';
+          
+          return `<div class="university-card">
+                    <h3>${name}</h3>
+                    <p><strong>Website:</strong> <a href="${web}" target="_blank">${web}</a></p>
+                    <p><strong>State/Province:</strong> ${state}</p>
+                  </div>`;
+        });
+        
+        universitiesDiv.innerHTML = cards.join('');
+      } catch (error) {
+        universitiesDiv.innerHTML = '<div class="error">Error fetching data. Please try again.</div>';
+        console.error('Error:', error);
+      }
+    }
+    
+    // Load on page load with default country
+    document.addEventListener('DOMContentLoaded', () => {
+      // Try with a default country
+      searchUniversities();
+    });
+  </script>
+</body>
+</html>

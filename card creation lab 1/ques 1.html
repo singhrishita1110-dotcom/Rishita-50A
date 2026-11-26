@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Concentric Circles</title>
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background: #f7f7f7;
+    }
+    canvas {
+      background: white;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="circles" width="200" height="200"></canvas>
+  <script>
+    const canvas = document.getElementById('circles');
+    const ctx = canvas.getContext('2d');
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+
+    const circles = [
+      {radius: 30, color: '#FF6B6B'},
+      {radius: 20, color: '#4ECDC4'},
+      {radius: 10, color: '#556270'}
+    ];
+
+    circles.forEach(circle => {
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, circle.radius, 0, Math.PI * 2);
+      ctx.strokeStyle = circle.color;
+      ctx.lineWidth = 4;
+      ctx.stroke();
+    });
+  </script>
+</body>
+</html>

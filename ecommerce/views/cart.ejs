@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - Shopping Cart</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+    .nav { margin-bottom: 20px; }
+    .nav a { margin-right: 15px; text-decoration: none; color: #333; }
+    .cart-item { border-bottom: 1px solid #eee; padding: 10px 0; }
+    .cart-item h3 { margin: 0 0 5px 0; }
+    .cart-item p { margin: 2px 0; color: #666; }
+    .total { font-size: 20px; font-weight: bold; margin-top: 20px; }
+    .btn-checkout { display: block; width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 20px; }
+    .btn-back { display: inline-block; margin-right: 10px; padding: 8px 16px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="nav">
+    <a href="/">Home</a>
+    <% if (localStorage.getItem('isSeller')) { %>
+      <a href="/seller/orders">Orders</a>
+    <% } %>
+  </div>
+  <h1><%= title %></h1>
+  
+  <% if (cart.length === 0) { %>
+    <p>Your cart is empty.</p>
+  <% } else { %>
+    <div>
+      <% cart.forEach(item => { %>
+        <div class="cart-item">
+          <h3><%= item.name %></h3>
+          <p>Price: $<%= item.price %></p>
+          <p>Quantity: <%= item.quantity %></p>
+        </div>
+      <% }) %>
+    </div>
+    <div class="total">Total: $<%= cart.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2) %></div>
+    <form action="/checkout" method="POST">
+      <button type="submit" class="btn-checkout">Checkout</button>
+    </form>
+    <a href="/" class="btn-back">Continue Shopping</a>
+  <% } %>
+</body>
+</html>

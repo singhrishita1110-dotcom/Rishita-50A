@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>To-Do List</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+    body { padding: 20px; background: #f4f4f9; }
+    .todo-container { max-width: 500px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+    input { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+    button { padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #218838; }
+    ul { list-style: none; }
+    li { display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; background: #fafafa; margin: 5px 0; border-radius: 4px; }
+    li.completed { text-decoration: line-through; color: #888; }
+    .actions { display: flex; gap: 5px; }
+    .actions button { flex: 1; padding: 5px; font-size: 12px; }
+    .delete { background: #dc3545; }
+    .delete:hover { background: #c82333; }
+    .up { background: #ffc107; color: #000; }
+    .up:hover { background: #e0a800; }
+    .down { background: #17a2b8; color: white; }
+    .down:hover { background: #138496; }
+    .checkbox { margin-right: 10px; transform: scale(1.2); }
+  </style>
+</head>
+<body>
+  <div class="todo-container">
+    <h2>To-Do List</h2>
+    <div class="input-group">
+      <input type="text" id="taskInput" placeholder="Enter a task...">
+      <button onclick="addTask()">Add Task</button>
+    </div>
+    <ul id="taskList">
+      <!-- Tasks will be added here -->
+    </ul>
+  </div>
+
+  <script>
+    function addTask() {
+      const input = document.getElementById('taskInput');
+      const taskText = input.value.trim();
+      if (!taskText) return;
+      
+      const li = document.createElement('li');
+      li.innerHTML = `
+        <span class="checkbox"><input type="checkbox" onchange="toggleTask(this)"></span>
+        <span>${taskText}</span>
+        <div class="actions">
+          <button class="up" onclick="moveUp(this)" title="Move Up">↑</button>
+          <button class="down" onclick="moveDown(this)" title="Move Down">↓</button>
+          <button class="delete" onclick="deleteTask(this)" title="Delete">✕</button>
+        </div>
+      `;
+      document.getElementById('taskList').appendChild(li);
+      input.value = '';
+    }
+    
+    function toggleTask(checkbox) {
+      const li = checkbox.parentElement.parentElement;
+      li.classList.toggle('completed');
+    }
+    
+    function deleteTask(button) {
+      const li = button.parentElement.parentElement;
+      li.remove();
+    }
+    
+    function moveUp(button) {
+      const li = button.parentElement.parentElement;
+      const prev = li.previousElementSibling;
+      if (prev) {
+        const parent = li.parentNode;
+        parent.insertBefore(li, prev);
+      }
+    }
+    
+    function moveDown(button) {
+      const li = button.parentElement.parentElement;
+      const next = li.nextElementSibling;
+      if (next) {
+        const parent = li.parentNode;
+        parent.insertBefore(next, li);
+      }
+    }
+    
+    // Initialize with some sample tasks
+    document.addEventListener('DOMContentLoaded', () => {
+      const sampleTasks = ['Buy groceries', 'Finish project', 'Call mother', 'Pay bills', 'Exercise'];
+      sampleTasks.forEach(() => addTaskWithoutInput());
+    });
+    
+    function addTaskWithoutInput(text) {
+      const li = document.createElement('li');
+      li.innerHTML = `
+        <span class="checkbox"><input type="checkbox" onchange="toggleTask(this)"></span>
+        <span>${text}</span>
+        <div class="actions">
+          <button class="up" onclick="moveUp(this)" title="Move Up">↑</button>
+          <button class="down" onclick="moveDown(this)" title="Move Down">↓</button>
+          <button class="delete" onclick="deleteTask(this)" title="Delete">✕</button>
+        </div>
+      `;
+      document.getElementById('taskList').appendChild(li);
+    }
+  </script>
+</body>
+</html>

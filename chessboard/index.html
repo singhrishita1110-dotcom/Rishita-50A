@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chessboard</title>
+  <style>
+    .board { width: 400px; height: 400px; margin: 0 auto; }
+    .square { width: 50px; height: 50px; float: left; }
+    .light { background: #f0d9b5; }
+    .dark { background: #b58863; }
+  </style>
+</head>
+<body>
+  <div class="board" id="board"></div>
+
+  <script>
+    const board = document.getElementById('board');
+    const size = 8;
+    
+    for (let i = 0; i < size * size; i++) {
+      const row = Math.floor(i / size);
+      const col = i % size;
+      
+      const square = document.createElement('div');
+      square.className = 'square ' + ((row + col) % 2 === 0 ? 'light' : 'dark');
+      board.appendChild(square);
+    }
+  </script>
+</body>
+</html>

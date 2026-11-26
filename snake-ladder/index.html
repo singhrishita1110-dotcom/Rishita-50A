@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake & Ladder Game</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+    body { background: linear-gradient(135deg, #667eea, #764ba2); min-height: 100vh; padding: 20px; }
+    .game-container { max-width: 1200px; margin: auto; text-align: center; }
+    h1 { color: white; margin-bottom: 25px; font-size: 40px; text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3); }
+    .game-area { display: flex; justify-content: center; align-items: flex-start; gap: 30px; flex-wrap: wrap; }
+    .board { width: min(90vw, 650px); height: min(90vw, 650px); display: grid; grid-template-columns: repeat(10, 1fr); grid-template-rows: repeat(10, 1fr); border: 6px solid #222; background: white; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3); }
+    .cell { position: relative; border: 1px solid #555; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: clamp(10px, 1.5vw, 17px); }
+    .cell:nth-child(odd) { background: #f9d976; }
+    .cell:nth-child(even) { background: #f39f86; }
+    .cell-number { position: absolute; top: 3px; left: 4px; font-size: 11px; color: #333; }
+    .snake { background: #ff7675 !important; }
+    .ladder { background: #55efc4 !important; }
+    .token-container { display: flex; gap: 2px; position: absolute; bottom: 3px; right: 3px; z-index: 5; }
+    .token { width: clamp(18px, 3vw, 30px); height: clamp(18px, 3vw, 30px); border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5); }
+    .token.red { background: #e74c3c; }
+    .token.blue { background: #3498db; }
+    .controls { width: 300px; background: white; border-radius: 15px; padding: 25px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25); }
+    .player-info { margin-bottom: 25px; }
+    .player { padding: 12px; margin-bottom: 10px; border-radius: 10px; background: #eee; font-size: 18px; font-weight: bold; transition: 0.3s; }
+    .player.active { background: #ffeaa7; transform: scale(1.03); box-shadow: 0 0 10px rgba(255, 193, 7, 0.5); }
+    .player-token { display: inline-block; width: 18px; height: 18px; border-radius: 50%; vertical-align: middle; margin-right: 8px; }
+    .player-token.red { background: #e74c3c; }
+    .player-token.blue { background: #3498db; }
+    .dice-area { margin-bottom: 25px; }
+    .dice { font-size: 70px; margin: 10px; transition: transform 0.3s; }
+    .dice.roll { animation: rollDice 0.5s ease; }
+    @keyframes rollDice { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.2); } 100% { transform: rotate(360deg) scale(1); } }
+    #message { font-size: 18px; font-weight: bold; min-height: 45px; margin-bottom: 10px; }
+    button { width: 100%; border: none; padding: 13px; margin-top: 10px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    #rollBtn { background: #2ecc71; color: white; }
+    #rollBtn:hover { background: #27ae60; transform: translateY(-2px); }
+    #restartBtn { background: #e74c3c; color: white; }
+    #restartBtn:hover { background: #c0392b; transform: translateY(-2px); }
+    button:disabled { background: #aaa; cursor: not-allowed; transform: none; }
+    .rules { text-align: left; border-top: 1px solid #ddd; padding-top: 15px; }
+    .rules h3 { text-align: center; margin-bottom: 10px; }
+    .rules ul { padding-left: 20px; }
+    .rules li { margin-bottom: 7px; font-size: 14px; }
+    @media (max-width: 700px) { body { padding: 10px; } h1 { font-size: 28px; } .controls { width: min(90vw, 400px); } }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1>🐍 Snake & Ladder 🎲</h1>
+    <div class="game-area">
+      <div id="board" class="board"></div>
+      <div class="controls">
+        <div class="player-info">
+          <div id="player1" class="player active"><span class="player-token red"></span> Player 1</div>
+          <div id="player2" class="player"><span class="player-token blue"></span> Player 2</div>
+        </div>
+        <div class="dice-area">
+          <div id="dice" class="dice">🎲</div>
+          <p id="message">Player 1's turn</p>
+          <button id="rollBtn">Roll Dice</button>
+          <button id="restartBtn">Restart Game</button>
+        </div>
+        <div class="rules">
+          <h3>Game Rules</h3>
+          <ul>
+            <li>Players take turns rolling the dice.</li>
+            <li>Landing on a ladder moves you up.</li>
+            <li>Landing on a snake moves you down.</li>
+            <li>First player to reach 100 wins!</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const boardSize = 100;
+    const snakes = {
+      99: 10, 95: 25, 88: 43, 81: 31, 64: 24, 62: 40, 56: 8, 49: 11, 45: 7, 16: 6
+    };
+    const ladders = {
+      1: 38, 8: 31, 21: 42, 28: 84, 36: 44, 51: 67, 71: 91, 80: 99, 78: 98, 54: 95, 30: 50
+    };
+
+    const board = document.getElementById('board');
+    const diceEl = document.getElementById('dice');
+    const messageEl = document.getElementById('message');
+    const rollBtn = document.getElementById('rollBtn');
+    const restartBtn = document.getElementById('restartBtn');
+
+    let currentPlayer = 0;
+    let positions = [0, 0];
+    let gameOver = false;
+
+    function createBoard() {
+      board.innerHTML = '';
+      for (let i = 1; i <= boardSize; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell cell-number';
+        cell.textContent = i;
+        
+        // Check for snakes and ladders
+        if (snakes[i]) {
+          cell.classList.add('snake');
+          cell.dataset.snake = snakes[i];
+        }
+        if (ladders[i]) {
+          cell.classList.add('ladder');
+          cell.dataset.ladder = ladders[i];
+        }
+        
+        // Alternate row direction for zigzag board
+        const row = Math.ceil(i / 10);
+        if (row % 2 === 0) {
+          cell.style.order = 11 - i;
+        }
+        
+        cell.addEventListener('click', () => moveToken(cell, i));
+        board.appendChild(cell);
+      }
+    }
+    
+    function moveToken(cell, targetPos) {
+      if (gameOver) return;
+      
+      // Find current token position
+      const tokens = cell.querySelectorAll('.token');
+      if (tokens.length > 0) {
+        // Token already here - this is a move
+        const currentPlayerIndex = positions.findIndex(p => p > 0);
+        // ... handle landing logic
+      }
+    }
+    
+    function rollDice() {
+      if (gameOver) return;
+      
+      const result = Math.floor(Math.random() * 6) + 1;
+      diceEl.textContent = result;
+      diceEl.classList.add('roll');
+      
+      setTimeout(() => {
+        diceEl.classList.remove('roll');
+        movePlayer(result);
+      }, 500);
+    }
+    
+    function movePlayer(steps) {
+      const currentPos = positions[currentPlayer];
+      const newPos = Math.min(currentPos + steps, boardSize);
+      positions[currentPlayer] = newPos;
+      
+      // Find the cell at new position
+      const cells = board.querySelectorAll('.cell');
+      const targetCell = cells[newPos - 1];
+      
+      // Create token if not exists
+      let token = targetCell.querySelector('.token');
+      if (!token) {
+        token = document.createElement('div');
+        token.className = `token ${currentPlayer === 0 ? 'red' : 'blue'}`;
+        targetCell.appendChild(token);
+      }
+      
+      // Check for snake or ladder
+      const snakePos = targetCell.dataset.snake ? parseInt(targetCell.dataset.snake) : null;
+      const ladderPos = targetCell.dataset.ladder ? parseInt(targetCell.dataset.ladder) : null;
+      
+      if (ladderPos) {
+        positions[currentPlayer] = ladderPos;
+        const ladderCell = cells[ladderPos - 1];
+        ladderCell.querySelector('.token').remove();
+        const newToken = document.createElement('div');
+        newToken.className = `token ${currentPlayer === 0 ? 'red' : 'blue'}`;
+        ladderCell.appendChild(newToken);
+        messageEl.textContent = `Player ${currentPlayer + 1} climbed a ladder!`;
+      } else if (snakePos) {
+        positions[currentPlayer] = snakePos;
+        const snakeCell = cells[snakePos - 1];
+        snakeCell.querySelector('.token').remove();
+        const newToken = document.createElement('div');
+        newToken.className = `token ${currentPlayer === 0 ? 'red' : 'blue'}`;
+        snakeCell.appendChild(newToken);
+        messageEl.textContent = `Player ${currentPlayer + 1} was bitten by a snake!`;
+      } else {
+        messageEl.textContent = `Player ${currentPlayer + 1} moved to ${newPos}`;
+      }
+      
+      checkWin();
+      switchPlayer();
+    }
+    
+    function checkWin() {
+      if (positions[currentPlayer] >= boardSize) {
+        gameOver = true;
+        messageEl.textContent = `Player ${currentPlayer + 1} wins! 🎉`;
+        rollBtn.disabled = true;
+      }
+    }
+    
+    function switchPlayer() {
+      currentPlayer = 1 - currentPlayer;
+      messageEl.textContent = `Player ${currentPlayer + 1}'s turn`;
+      const players = document.querySelectorAll('.player');
+      players.forEach((p, i) => {
+        p.classList.toggle('active', i === currentPlayer);
+      });
+      rollBtn.disabled = false;
+    }
+    
+    restartBtn.addEventListener('click', () => {
+      positions = [0, 0];
+      currentPlayer = 0;
+      gameOver = false;
+      rollBtn.disabled = false;
+      messageEl.textContent = 'Player 1's turn';
+      createBoard();
+      const tokens = board.querySelectorAll('.token');
+      tokens.forEach(t => t.remove());
+    });
+    
+    createBoard();
+    rollBtn.addEventListener('click', rollDice);
+  </script>
+</body>
+</html>
